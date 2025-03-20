@@ -1,6 +1,6 @@
 import os
 
-def read_ini():
+def read_file():
     current_directory = os.path.dirname(__file__)
     file_path = os.path.join(current_directory, 'dataset.ini')
 
@@ -8,12 +8,12 @@ def read_ini():
         data = file.read()
     return data
 
-contenido = read_ini()
+contenido = read_file()
 
-def get_value(row, col):
+def obtainer(row, col):
     return (row * 8 + col) % 32
 
-def find_duplicates(data):
+def encontrar_duplicados(data):
     values = data.split()
     duplicates = set()
     seen = set()
@@ -26,10 +26,10 @@ def find_duplicates(data):
     
     return duplicates
 
-duplicados = find_duplicates(contenido)
+duplicados = encontrar_duplicados(contenido)
 conteo_duplicados = len(duplicados)
 print("Cantidad de valores duplicados:", conteo_duplicados)
 print("Valores duplicados en dataset.ini:", duplicados)
 row = 1
 col = 8
-print("Valor en coordenadas :", row, col, hex(get_value(row, col)))
+print("Valor en coordenadas :", row, col, hex(obtainer(row, col)))
