@@ -2,22 +2,23 @@ import numpy as np
 
 def rgb_to_hsv(rgb):
     rgb = rgb / 255.0
-    demo_max = np.max(rgb, axis=-1)
-    demo_min = np.min(rgb, axis=-1)
-    delta = demo_max - demo_min
+    max_val = np.max(rgb, axis=-1)
+    min_val = np.min(rgb, axis=-1)
+    delta = max_val - min_val
 
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
-    
-    th = np.zeros_like(demo_max)
-    th[demo_max == r] = 60 * (g - b)[demo_max == r] / (delta[demo_max == r] + 1e-10)
-    th[demo_max == g] = 60 * (b - r)[demo_max == g] / (delta[demo_max == g] + 1e-10) + 120
-    th[demo_max == b] = 60 * (r - g)[demo_max == b] / (delta[demo_max == b] + 1e-10) + 240
-    th = np.mod(th, 360)
 
-    ts = delta / (demo_max + 1e-10)
-    tv = demo_max
+    hue = np.zeros_like(max_val)
+    hue = np.where(delta != 0, np.select(
+        [max_val == r, max_val == g, max_val == b],
+        [(g - b) / delta, (b - r) / delta + 2, (r - g) / delta + 4]
+    ) * 60, hue)
+    hue = np.mod(hue, 360)
 
-    return np.stack([th, ts, tv], axis=-1)
+    saturation = np.where(max_val != 0, delta / max_val, 0)
+    value = max_val
+
+    return np.stack([hue, saturation, value], axis=-1)
 
 def hsv_to_rgb(hsv):
     h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
@@ -26,21 +27,17 @@ def hsv_to_rgb(hsv):
     x = c * (1 - np.abs(np.mod(h / 60.0, 2) - 1))
     m = v - c
 
-    q  = np.zeros_like(h)
-    rgb = np.stack([
-        np.select([h < 60, h < 120, h < 180, h < 240, h < 300, h < 360],
-                  [c + m, x + m, m, m, x + m, c + m], default=q),
-        np.select([h < 60, h < 120, h < 180, h < 240, h < 300, h < 360],
-                  [x + m, c + m, c + m, x + m, m, m], default=q),
-        np.select([h < 60, h < 120, h < 180, h < 240, h < 300, h < 360],
-                  [m, m, x + m, c + m, c + m, x + m], default=q)
-    ], axis=-1)
+    idx = (h // 60).astype(int)
+    rgb_matrix = np.array([
+        [c, x, 0], [x, c, 0], [0, c, x],
+        [0, x, c], [x, 0, c], [c, 0, x]
+    ])
     
+    rgb = rgb_matrix[idx] + m[..., np.newaxis]
     return (rgb * 255.0).astype(int)
-
 
 rgb_input = np.array([180, 53, 89])
 hsv = rgb_to_hsv(rgb_input)
 rgb_output = hsv_to_rgb(hsv)
-print('RGB to HSV', hsv)
-print('RGB', rgb_output)
+print('RGB to HSV:', hsv)
+print('HSV to RGB:', rgb_output)

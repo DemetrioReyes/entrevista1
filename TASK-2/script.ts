@@ -1,45 +1,40 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-// ● lectura del archivo data.txt
+// Lectura del archivo data.txt
+function leerArchivo(): string {
+    const directorioActual = __dirname;
+    const rutaArchivo = path.join(directorioActual, 'data.txt');
 
-function readIni(): string {
-    const currentDirectory = __dirname;
-    const filePath = path.join(currentDirectory, 'data.txt');
-
-    const data = fs.readFileSync(filePath, 'utf-8');
-    return data;
+    return fs.readFileSync(rutaArchivo, 'utf-8');
 }
 
-const contenido = readIni();
-// console.log(contenido);
+const contenido = leerArchivo();
 
-// ● Cuenta cuántas veces aparece cada palabra única en el archivo (ya sabes, para que te des cuenta de cuántas veces se repite "the").
-
-function countWords(text: string): Map<string, number> {
-    const words = text.split(' ');
-    const wordCount = new Map<string, number>();
+// Función para contar la frecuencia de las palabras en el texto
+function contarPalabras(texto: string): Map<string, number> {
+    const palabras = texto.toLowerCase().replace(/[^a-záéíóúüñ\s]/gi, '').split(/\s+/);
+    const conteoPalabras = new Map<string, number>();
     
-    for (const word of words) {
-        const currentCount = wordCount.get(word) || 0;
-        wordCount.set(word, currentCount + 1);
+    for (const palabra of palabras) {
+        if (!palabra) continue;
+        if (conteoPalabras.has(palabra)) {
+            conteoPalabras.set(palabra, (conteoPalabras.get(palabra) as number) + 1);
+        } else {
+            conteoPalabras.set(palabra, 1);
+        }
     }
-
-    return wordCount;
+    return conteoPalabras;
 }
 
-const wordCount = countWords(contenido);
-console.log(wordCount);
+const conteo = contarPalabras(contenido);
 
-// ● Muestra las 10 palabras más frecuentes y sus respectivos conteos
-
-function ToptenWords(wordCount: Map<string, number>): [string, number][] {
-    const sortedWords = Array.from(wordCount.entries()).sort((a, b) => b[1] - a[1]);
-    return sortedWords.slice(0, 10);
+// Mostrar las 10 palabras más frecuentes
+function palabrasMasFrecuentes(conteo: Map<string, number>): [string, number][] {
+    return Array.from(conteo.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
 }
 
-const topTen = ToptenWords(wordCount);
-console.log(topTen);
-
-
-
+const topDiez = palabrasMasFrecuentes(conteo);
+console.log(topDiez);
